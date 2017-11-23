@@ -12,4 +12,4 @@ home automation system
 
 ## supported functions:
 - Controlling central heating over the internet
-- comming soon!!
+- comming soon!!!
