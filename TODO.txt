@@ -1,0 +1,7 @@
+test Wifi reconnect function
+
+add more LEDs
+
+add watchdog 
+
+add security preventing heavy usage of central heating
