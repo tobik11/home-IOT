@@ -1,2 +1,11 @@
 # home-IOT
-home internet of things based of raspberry pi and esp12
+
+
+## hardware:
+- raspberry pi
+- esp12
+
+## software:
+- node-RED
+- mosquitto MQTT broker
+- esp12 arduino libraries
