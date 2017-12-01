@@ -2,24 +2,34 @@
 #include "connectivity.h"
 
 
-
-const int oven_off = 70; // oven off servo position
+const int oven_off = 70; // oven off servo position /water heating on
 const int oven_on = 110;
+const int oven_perm_off = 90; // power off servo position
 const int servoPin = 5;
 const int lamp = 12; // led indicator
 bool oven_working = true;
+bool need_restart = false;
 int oven_time = 0; // counts how long does the oven have to work (*6s)
 long now = millis();
 long lastMeasure = 0;
 
-Servo myservo; // creating servo object
 
-void set_servo(int pos)
+
+void set_servo(Servo serv, int pos)
 {
-  myservo.attach(servoPin);
-  myservo.write(pos);
+  serv.attach(servoPin);
+  serv.write(pos);
   delay(2000);
-  myservo.detach();
+  serv.detach();
+}
+
+void blink_led(int n){
+  for(int i=0; i<n; i++){
+        digitalWrite(lamp, HIGH);
+        delay(50);
+        digitalWrite(lamp, LOW);
+        delay(100);
+       }
 }
 
 
@@ -46,24 +56,30 @@ void callback(String topic, byte* message, unsigned int length) {
        oven_time = 0;
        Serial.print("Off");
      }
+     else if(messageTemp == "reset"){
+       need_restart = true;
+       Serial.print("restarting");
+     }
      else if(messageTemp != NULL) // in case of turning the oven on for a specific time period
      {
        oven_time = messageTemp.toInt();
+       Serial.println(oven_time);
      }
    }
   Serial.println();
 }
 
-
+Servo myservo; // creating servo object
 
 // GPIO, serial and wifi setup
 void setup() {
   pinMode(lamp, OUTPUT);
   Serial.begin(115200);
+
   setup_wifi();
   client.setServer(mqtt_server, 1883);
   client.setCallback(callback);
-  set_servo(oven_off);
+  set_servo(myservo, oven_off);
 }
 
 
@@ -78,22 +94,29 @@ void loop() {
   now = millis();
   if (now - lastMeasure > 6000) {
     lastMeasure = now;
+    if(need_restart == true){
+      need_restart = false;
+      blink_led(5);
+      set_servo(myservo, oven_perm_off);
+      set_servo(myservo, oven_off);
+      oven_working = false;
+      client.publish("DOM/feedback", "ovenRestarted");
+    }
     if(oven_time > 0)
       {
         if(!oven_working){
           digitalWrite(lamp, HIGH);
-          set_servo(oven_on);
+          set_servo(myservo, oven_on);
           client.publish("DOM/feedback", "ovenOn");
           oven_working = true;
         }
-        
         oven_time--;
       }
      else
      {
       if(oven_working){
           digitalWrite(lamp, LOW);
-          set_servo(oven_off);
+          set_servo(myservo, oven_off);
           client.publish("DOM/feedback", "ovenOff");
           oven_working = false;
         }

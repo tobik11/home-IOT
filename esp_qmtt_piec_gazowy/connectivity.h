@@ -1,9 +1,9 @@
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
 
-const char* ssid = "TP-LINK_6162"; // wifi ssid
-const char* password = "sonet1001"; // wifi password
-const char* mqtt_server = "192.168.1.107"; // raspberry IP
+const char* ssid = "UPCFD833CA"; // wifi ssid TP-LINK_6162
+const char* password = "vkjmfTmhppy2"; // wifi password sonet1001
+const char* mqtt_server = "192.168.0.107"; // raspberry IP
 
 
 // Initializes the espClient. You should change the espClient name if you have multiple ESPs running in your home automation system
