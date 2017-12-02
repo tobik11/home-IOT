@@ -12,6 +12,8 @@ bool need_restart = false;
 int oven_time = 0; // counts how long does the oven have to work (*6s)
 long now = millis();
 long lastMeasure = 0;
+long lastTelSend = 0;
+const int telSendInterval = 12000;
 
 
 
@@ -82,6 +84,18 @@ void setup() {
   set_servo(myservo, oven_off);
 }
 
+char * toArray(int number)
+    {
+        int n = log10(number) + 1;
+        int i;
+      char numberArray[10]; 
+        for ( i = 0; i < n; ++i, number /= 10 )
+        {
+            numberArray[i] = number % 10;
+        }
+        return numberArray;
+    }
+
 
 void loop() {
   //check_wifi();              // checks
@@ -120,6 +134,14 @@ void loop() {
           client.publish("DOM/feedback", "ovenOff");
           oven_working = false;
         }
+     }
+     if(now-lastTelSend > telSendInterval){
+      //char msg[30] = {oven_time, oven_working};
+      char msg[30];
+      itoa(oven_time, msg, 10);
+
+      client.publish("DOM/status", msg);
+      lastTelSend = now;
      }
   }
 } 
