@@ -6,15 +6,18 @@ const int oven_off = 70; // oven off servo position /water heating on
 const int oven_on = 110;
 const int oven_perm_off = 90; // power off servo position
 const int servoPin = 5;
-const int lamp = 12; // led indicator
+const int led_G = 12; // green led
+const int led_R = 15; // red led
+const int led_B = 13; // blue led
 bool oven_working = true;
 bool need_restart = false;
 int oven_time = 0; // counts how long does the oven have to work (*6s)
 long now = millis();
 long lastMeasure = 0;
 long lastTelSend = 0;
-const int telSendInterval = 12000;
-
+long lastHeartbeat = 0;
+const int telSendInterval = 12000; // in ms
+const int heartbeatInterval = 3000;
 
 
 void set_servo(Servo serv, int pos)
@@ -27,9 +30,9 @@ void set_servo(Servo serv, int pos)
 
 void blink_led(int n){
   for(int i=0; i<n; i++){
-        digitalWrite(lamp, HIGH);
+        digitalWrite(led_G, HIGH);
         delay(50);
-        digitalWrite(lamp, LOW);
+        digitalWrite(led_G, LOW);
         delay(100);
        }
 }
@@ -75,7 +78,8 @@ Servo myservo; // creating servo object
 
 // GPIO, serial and wifi setup
 void setup() {
-  pinMode(lamp, OUTPUT);
+  pinMode(led_G, OUTPUT);
+  pinMode(led_R, OUTPUT);
   Serial.begin(115200);
 
   setup_wifi();
@@ -119,29 +123,53 @@ void loop() {
     if(oven_time > 0)
       {
         if(!oven_working){
-          digitalWrite(lamp, HIGH);
+          digitalWrite(led_G, HIGH);
           set_servo(myservo, oven_on);
           client.publish("DOM/feedback", "ovenOn");
           oven_working = true;
         }
         oven_time--;
       }
-     else
-     {
-      if(oven_working){
-          digitalWrite(lamp, LOW);
-          set_servo(myservo, oven_off);
-          client.publish("DOM/feedback", "ovenOff");
-          oven_working = false;
-        }
-     }
-     if(now-lastTelSend > telSendInterval){
+    else
+    {
+     if(oven_working){
+         digitalWrite(led_G, LOW);
+         set_servo(myservo, oven_off);
+         client.publish("DOM/feedback", "ovenOff");
+         oven_working = false;
+       }
+    }
+    if(now-lastTelSend > telSendInterval){
       //char msg[30] = {oven_time, oven_working};
       char msg[30];
       itoa(oven_time, msg, 10);
 
       client.publish("DOM/status", msg);
       lastTelSend = now;
-     }
+    }
   }
-} 
+  if(now-lastHeartbeat > heartbeatInterval){
+    int i=0;
+    // add logic to activate led_R when connection is down
+    while(i < 255){
+      analogWrite(led_B, i);
+      i += 1+i/20;
+      delay(30);
+    }
+    while(i > 0){
+      analogWrite(led_B, i);
+      i -= 1+i/20;
+      delay(30);
+    }
+    analogWrite(led_B, 0);
+    lastHeartbeat = millis();
+  }
+ /* for(int i=0; i<205; i++){
+    analogWrite(led_R, i);
+    delay(20);
+  }
+  for(int i=205; i>0; i--){
+    analogWrite(led_R, i);
+    delay(20);
+  }*/ 
+}
