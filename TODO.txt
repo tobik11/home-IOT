@@ -1,12 +1,5 @@
 test Wifi reconnect function
 
-add more LEDs
-
 add watchdog 
 
-add security preventing heavy usage of central heating
-
-make code reorganisation (wifi objects created in void setup() and used
-only in connectivity.c
-
-file reorganisation
+add support for multi esp8266
